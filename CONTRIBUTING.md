@@ -1,6 +1,6 @@
 # Contributing
 
-OpenFleet is a **design preview (0.0.0)**. Only proposals are here, no code. The most useful contribution right now is critical feedback.
+OpenWiz is a **design preview (0.0.0)**. Only proposals are here, no code. The most useful contribution right now is critical feedback.
 
 ## What helps
 
@@ -13,7 +13,7 @@ Open an issue about:
 
 ## Pull requests
 
-OpenFleet is licensed under the [Apache License 2.0](LICENSE). Unless you state otherwise, any contribution you submit is licensed under the same terms, as described in section 5 of the license. There is no separate contributor agreement.
+OpenWiz is licensed under the [Apache License 2.0](LICENSE). Unless you state otherwise, any contribution you submit is licensed under the same terms, as described in section 5 of the license. There is no separate contributor agreement.
 
 For anything beyond a small fix, please open an issue first so the change can be discussed while this is still a proposal.
 
