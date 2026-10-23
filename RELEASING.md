@@ -2,14 +2,39 @@
 
 ## Version lines
 
-- **OpenFleet** product versions: `0.0.0` is this design preview.
-- **PACP** protocol drafts: `v0.1` is the current draft. Protocol versions change independently of product versions (see [PACP versioning](docs/pacp/v0.1.md#13-versioning)).
+Each line has its own numbers. A number on one line never implies anything about another.
+
+| Line | Current | Where it is recorded |
+| --- | --- | --- |
+| **OpenWiz** (the product) | `0.0.0`: design preview, documents only | `CHANGELOG.md`; once there is code, also the Rust workspace version, which the CLI prints along with the commit |
+| **PACP** (the protocol) | `v0.1` (draft) | [PACP versioning](docs/pacp/v0.1.md#13-versioning) and its version history |
+| **Adapters** (one per personal agent) | none exist | each adapter's own notes, when one exists |
+
+OpenWiz is developed in a private beta before each public release. Beta builds carry pre-release versions, such as `0.0.1-beta.1`. Only a release reviewed through the process below appears here.
+
+## Versions are not dependencies
+
+A version number says when something changed. It does not say what works with what. Real technical dependencies are stated explicitly for each release that contains software:
+
+- the PACP version or versions it implements;
+- the external tools and services it was tested against, with exact versions, such as a CloudRoom CLI version;
+- the minimum toolchain needed to build it, such as the Rust and Node.js versions.
+
+If a dependency is not listed with evidence, it is not claimed. A higher version on one line never upgrades a claim on another.
 
 ## What 0.0.0 is
 
 0.0.0 is a set of proposal documents. It contains no implementation, package, install step, endpoint or test suite. Its release notes and any tag must say **"design preview, no implementation"**. A 0.0.0 release does not mean that any component works or that PACP has been implemented anywhere.
 
-Later versions are not scheduled. A version that contains software must state, before it is tagged, how to install it, what was tested, and on what evidence.
+**Revising 0.0.0.** The 0.0.0 documents may be revised to correct them or to record later design decisions, such as the rename to OpenWiz. Each revision:
+- is listed in `CHANGELOG.md` with its date;
+- keeps the version at 0.0.0;
+- never adds software or a capability claim.
+
+The first version with software will be 0.0.1. Its planned first job is a read-only inventory of real CloudRoom sessions (see [decisions](docs/decisions.md#planned-next-001-not-started)). Before it is tagged, it must state:
+- how to install it;
+- what was tested, and on what evidence;
+- its explicit dependencies.
 
 ## How a release is reviewed
 
@@ -23,6 +48,21 @@ Work is prepared privately and published here only through an allowlisted export
 6. **Publish and verify.** The change is published as an ordinary commit without force-pushing. The remote tree is then compared with the approved files.
 
 The release does not happen if any step fails. Tags and GitHub Releases are created only by the maintainer, and only after step 6.
+
+## What a version contains
+
+- **A version has at most five meaningful outcomes, preferably one to three.** An outcome is a concrete result a user can see or check, such as "a read-only inventory of real sessions". It is not an activity, such as "improvements".
+- **No vague bullets.** A large feature bundle never hides under a vague bullet. If a version would need more than five outcomes, it is split into more versions.
+- **Every outcome is proof-driven.** Each one names its claims and the evidence each claim needs before work starts, and reports that evidence at release. Tests alone do not prove live behaviour, and nothing is called formally proven without an actual formal proof. See [docs/workflow.md](docs/workflow.md#proof-driven-development).
+
+## Changelog
+
+`CHANGELOG.md` lists every version and every revision of a version, newest first. Each entry has:
+- the version and date;
+- its outcomes, no more than five;
+- for software, what was tested and what remains unproved.
+
+Entries are written for the public when the change is published. They never copy private notes.
 
 ## What a release never claims
 

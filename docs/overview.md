@@ -1,4 +1,4 @@
-# OpenFleet overview
+# OpenWiz overview
 
 **Status: Proposed.** This describes intended design, not built software.
 
@@ -12,9 +12,9 @@ The person ends up as the integration layer. They copy context from one agent to
 
 | Layer | Role | Status |
 | --- | --- | --- |
-| **Personal agents** | The agents the user already chooses. A user can start with one and add more later. OpenFleet does not replace them. | The agents exist. Connecting them is unverified. |
-| **Coordination layer** | Keeps user-owned memory, scopes what each agent may use, routes delegation and handoff, and records provenance. | Proposed |
-| **Downstream coding factories** | Run bounded build, test, review and rework loops, and stop at policy gates. | Proposed. The control route is unverified. |
+| **Personal agents** | The agents the user already chooses. A user can start with one and add more later. OpenWiz does not replace them. | The agents exist. Connecting them is unverified. |
+| **Controller** (the coordination layer) | The one Rust core that owns authoritative state, permissions, routing and coordination. It scopes what each agent may use, routes delegation and handoff, and records provenance. | Proposed |
+| **Downstream coding factories** | One per project. Each project orchestrator runs its factory's bounded loop under the controller and stops at policy gates. It is not a second authority. | Proposed. The control route is unverified. |
 
 Agents would talk to the coordination layer through **PACP** (Personal Agent Connection Protocol), a separate [draft protocol](pacp/v0.1.md). Each agent needs an **adapter** that translates between its own supported interface and PACP. An adapter is possible only where such an interface exists and the user is allowed to use it.
 
@@ -38,17 +38,20 @@ Managed hosting and selling compute are possible paid offerings for later. Neith
 
 ## Interfaces: CLI-first and agent-first
 
-- **CLI and personal agent.** Users would drive OpenFleet from a command line, or through **controller commands and buttons** in their personal agent. That is where they would approve a plan, answer a policy gate, or stop and resume work, with less terminal management. Where an agent has no supported way to show these, that is reported as **unsupported**.
-- **OpenFleet Web.** A live graph and control surface over the **same backend and operations** as the CLI and agent commands. It is not a separate state authority. It would show what is running, blocked or done, loop and review progress, and policy decisions. Each item would link to the real underlying artifact, such as a ticket, pull request or test run.
+- **CLI and personal agent.** Users would drive OpenWiz from a command line, or through **controller commands and buttons** in their personal agent. That is where they would approve a plan, answer a policy gate, or stop and resume work, with less terminal management. Where an agent has no supported way to show these, that is reported as **unsupported**.
+- **OpenWiz Web.** A live graph and control surface over the **same backend and operations** as the CLI and agent commands, built as a Next.js and TypeScript client. It is not a separate state authority. It would show what is running, blocked or done, loop and review progress, and policy decisions. Each item would link to the real underlying artifact, such as a ticket, pull request or test run.
 
-All of these are proposed. None exists yet.
+- **Rust core.** The controller, the CLI and all backend logic would be written in Rust. The web client and any agent adapter call the same Rust backend operations.
+- **Desktop packaging** is undecided.
+
+The proposed command set, decision types and screens are in [interface.md](interface.md). All of these are proposed. None exists yet.
 
 ## The out-of-the-box factory: built-in plans
 
 1. **Idea.** Use **Grill**, focused questioning that sharpens one idea, or **Wayfinder**, a broader exploration across related ideas.
 2. **Plan.** The idea becomes a version, a spec or a set of tickets.
 3. **Plan approval.** The user approves the plan. This approval covers that plan only. It is not blanket permission for every action the plan leads to.
-4. **Launch.** The factory would run bounded loops of build, test, independent review and rework, with an attempt limit. When the limit is reached, the work stops and escalates to the user.
+4. **Launch.** The factory would run bounded loops of build, test, independent review and rework, with correction rounds counted per review finding. By default that is two rounds, then a diagnosis by the project orchestrator, then one more round. If the finding is still open, the work stops and escalates to the user.
 
 ## Approval checkpoints are policy
 
@@ -75,7 +78,7 @@ Detailed memory behaviour is **deliberately not settled here**. That includes co
 > 1. The email assistant sees that the review of `example-project` moved to Friday. The change is captured automatically into User A's memory repository, with provenance recording where it came from.
 > 2. The chat assistant reads the same project memory later, and sees the new date without User A repeating it.
 > 3. User A asks the chat assistant to fix a failing test before Friday. A short Grill produces two tickets. User A approves that plan with a button.
-> 4. The factory builds, tests, reviews and reworks, with at most three rework attempts. User A's policy says merges to this repository need approval, so at the merge gate the factory asks. User A approves, and the result comes back as a status update with evidence.
+> 4. The factory builds, tests, reviews and reworks, with correction rounds counted per review finding. User A's policy says merges to this repository need approval, so at the merge gate the factory asks. User A approves, and the result comes back as a status update with evidence.
 
 Every name and identifier in this example is invented. The button in step 3 is proposed and does not exist.
 
@@ -86,15 +89,16 @@ Every name and identifier in this example is invented. The button in step 3 is p
 | **User** | The person who owns the memory, sets policy and makes decisions. PACP calls this role the *owner*. |
 | **Personal agent** | An assistant the user chooses, from any vendor. |
 | **Adapter** | A component that translates between one agent's supported interface and PACP. |
-| **Coordination layer** | The OpenFleet component above the agents. |
+| **Coordination layer** | Another name for the controller. |
 | **Durable memory** | User-owned records with versions and provenance, kept in the user's private repository. |
 | **Context window** | The transient input for a single model invocation. It is not memory. |
-| **Controller** | The component that starts, tracks, reuses and retires coding sessions. In the pilot it runs on a user-owned PC. Event-driven hosting in CloudRoom is a proposed alternative. |
+| **Controller** | The one Rust core that owns authoritative state, permissions, routing and coordination. Clients, adapters and project orchestrators all act through it. In the pilot it runs on a user-owned PC; event-driven hosting in CloudRoom is a proposed alternative. |
+| **Project orchestrator** | Runs one project's factory workflow under the controller. It holds no authoritative state and is not a second authority. |
 | **Issue tracker** | Where the user's tickets live. GitHub Issues or another tracker the user already has. |
-| **OpenFleet Web** | A live graph and control surface over the same backend and operations as the CLI. It is not a separate state authority. |
+| **OpenWiz Web** | A live graph and control surface over the same backend and operations as the CLI, built in Next.js. It is not a separate state authority. |
 | **Plan** | A version, spec or set of tickets produced from Grill or Wayfinder and approved by the user. |
 | **Policy gate** | A checkpoint that either requests approval or proceeds only under applicable prior authorization. |
-| **Bounded loop** | Build → test → review → rework, with an attempt limit, ending at a policy gate or in escalation. |
+| **Bounded loop** | Define proof → build → test → review → rework, with correction rounds counted per review finding (default 2 + 1), ending at a policy gate or in escalation. |
 
 ## Relation to the software-factory glossary
 
@@ -102,9 +106,9 @@ This is a dated reference. The downstream factory borrows concepts from Matt Poc
 
 At that commit, the glossary describes a factory that turns tickets into merged code through **runs** on **runners**, started by **triggers** and tracked by an **orchestrator**. Here those ideas apply **only to the downstream factory**, not to the personal-agent layer above it:
 
-- The controller fills roughly the glossary's *orchestrator* role.
+- The glossary's *orchestrator* role is split here. The controller holds the authority, and each project orchestrator runs its factory's loop under it.
 - A bounded loop attempt corresponds to one or more glossary *runs*.
-- The glossary says a run never waits for a human: it ends, and a later human change starts a new run. OpenFleet's policy gates fit that model. An approval is a user action that starts the next step, and a prior authorization lets the next step start without one.
+- The glossary says a run never waits for a human: it ends, and a later human change starts a new run. OpenWiz's policy gates fit that model. An approval is a user action that starts the next step, and a prior authorization lets the next step start without one.
 
 ## Principles
 
@@ -115,3 +119,4 @@ At that commit, the glossary describes a factory that turns tickets into merged 
 5. **Uncertainty stays visible.** Unknown outcomes are reported as uncertain and reconciled before any retry.
 6. **Memory is data, not instructions.** Content from memory or from another agent never grants authority.
 7. **No silent capability claims.** If an agent or service cannot do something, the answer is "unsupported", not an emulation.
+8. **Proof before claims.** Each claim and the evidence it needs are defined before building, then verified and independently reviewed. Tests alone do not prove live behaviour. See [workflow.md](workflow.md#proof-driven-development).
